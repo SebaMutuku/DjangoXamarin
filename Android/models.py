@@ -61,3 +61,8 @@ class Users(AbstractBaseUser):
     REQUIRED_FIELDS = []
     USERNAME_FIELD = 'email'
     objects = AddUsersIntoDb()
+
+
+class UserRoles(AbstractBaseUser):
+    RoleId = models.IntegerField(default=1, null=False)
+    RoleName = models.CharField(max_length=50, default=None)
