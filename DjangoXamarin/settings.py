@@ -37,7 +37,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'Android'
+    'Android',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'corsheaders',
+    'rest_auth',
 ]
 
 MIDDLEWARE = [
@@ -95,6 +99,16 @@ DATABASES = {
         'PORT': '',
     }
 }
+"""DATABASES = {
+    'default': {
+        'ENGINE': 'djongo',
+        'NAME': 'DjangoAngular',
+        'USER': 'root',
+        'PASSWORD': 'djangoangular',
+        'HOST': 'localhost',
+        'POST': '27017'
+    }
+} """
 
 
 # Password validation
