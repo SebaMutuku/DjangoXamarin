@@ -27,8 +27,8 @@ class AddUsersIntoDb(BaseUserManager):
         return user
 
     @staticmethod
-    def loginUserIntoModel(Username=None, Password=None):
-        user = Users.objects.filter(Username=Username, Password=Password)
+    def loginUserIntoModel(email=None, Password=None):
+        user = Users.objects.filter(email=email, Password=Password)
         return user or None
 
 
@@ -41,7 +41,7 @@ class Users(AbstractBaseUser):
         return self.FirstName
 
     def __str__(self):
-        return self.Username
+        return self.email
 
     @property
     def token(self):
@@ -49,7 +49,6 @@ class Users(AbstractBaseUser):
 
     email = models.EmailField(unique=True, max_length=255, null=False)
     Password = models.CharField(max_length=12000, null=False)
-    Username = models.CharField(max_length=50, default=None)
     FirstName = models.CharField(max_length=50, default=None)
     SecondName = models.CharField(max_length=50, default=None)
     RoleId = models.IntegerField(default=1, null=False)

@@ -15,27 +15,24 @@ class LoginSerializer(serializers.Serializer):
     class Meta:
 
         fields = (
-            'Username',
+            'email',
             'Password'
         )
         model = UserModel
 
-    def loginUser(self, data):
-        username = data.get('Username')
+    def checkLoginCredentials(self, data):
+        email = data.get('email')
         #password = pbkdf2_sha256.encrypt(data.get('password'), rounds=36000, salt_size=32)
-        password=data.get('password')
-        query = UserModel.objects.raw("select * from Users")
+        password = data.get('Password')
         print(str(data))
         print("Password is: ", password)
         logger.info("Invalid user")
 
         try:
-            user = UserModel.objects.get(Username=username, Password=password)
-            dbPassword = user.Password
-            print('Password.......' + str(dbPassword))
+            user = UserModel.objects.get(email=email)
             if user is not None:
                 user = user
-                logging.getLogger( logger.info(user))
+                logging.getLogger(logger.info(user))
             else:
                 raise serializers.ValidationError({"Message": "Invalid login Credentials"})
 
@@ -49,7 +46,6 @@ class RegisterSerializer(serializers.ModelSerializer, PageNumberPagination):
         model = UserModel
         fields = (
             'id',
-            'Username',
             'email',
             'FirstName',
             'SecondName',
@@ -80,7 +76,6 @@ class RegisterSerializer(serializers.ModelSerializer, PageNumberPagination):
                     password = pbkdf2_sha256.encrypt(data['Password'], rounds=36000, salt_size=32)
                     user = UserModel.objects.create(
                         email=data['email'],
-                        Username=data['Username'],
                         Password=data['Password'],
                         FirstName=data['FirstName'],
                         SecondName=data['SecondName'], )
@@ -93,7 +88,6 @@ class ListAllUsers(serializers.ModelSerializer, PageNumberPagination):
         model = UserModel
         fields = (
             'id',
-            'Username',
             'email',
             'FirstName',
             'SecondName',

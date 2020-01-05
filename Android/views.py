@@ -24,13 +24,12 @@ class Login(APIView):
     permission_classes = (AllowAny,)
     authentication_classes = (SessionAuthentication, BasicAuthentication)
     parser_classes(JSONParser, )
-    serializer_class = LoginSerializer
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         if serializer.is_valid():
-            user = serializer.loginUser(request.data)
+            user = serializer.checkLoginCredentials(request.data)
             print (str(user))
             if user is not None:
                 token, created = Token.objects.get_or_create(user=user)
@@ -39,6 +38,7 @@ class Login(APIView):
                     return Response(response, status=status.HTTP_200_OK)
                 else:
                     response = {{"Message": "Invalid Login Credentials", "token": None}}
+                   # response = {{"Message": "Invalid Login Credentials", "token": "oioitoioio6ytytTBVGYGt"}}
                     return Response(response, status=status.HTTP_200_OK)
             else:
                 response = {"Message": "Invalid Login Credentials", "token": None}
@@ -61,7 +61,7 @@ class Register(views.APIView):
             user = serializer.addUser(request.data)
             if user:
                 return Response({"User": serializer.data,
-                                 "Message": "Successfully created user " "[" + request.data.get('Username') + "]"},
+                                 "Message": "Successfully created user " "[" + request.data.get('email') + "]"},
                                 status=status.HTTP_200_OK)
             else:
                 return Response({"Invalid login credentials"},
@@ -77,7 +77,7 @@ class Logout(views.APIView):
     def post(self, request):
         user = logout(request)
         if user:
-            return Response({"Message": "Successfully logged out " + request.user.username},
+            return Response({"Message": "Successfully logged out " + request.user.email},
                             status=status.HTTP_200_OK)
         else:
             return Response({"Message": "Error Occurred while logging out"}, status=status.HTTP_401_UNAUTHORIZED)
