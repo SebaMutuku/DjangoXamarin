@@ -99,12 +99,12 @@ class ListAllUsers(serializers.ModelSerializer, PageNumberPagination):
             'token'
         )
 
-    def listUsers(self, data):
-        user = UserModel.objects.all()
+    def listUsers(self):
+        user =UserModel.objects.all()
         if user is not None:
             return user
         else:
-            user = None
+            return user or None
 
     def findByEmail(self, data):
         try:

@@ -4,6 +4,7 @@
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
+#from oauth2client.contrib.django_util.models import CredentialsField
 
 User = settings.AUTH_USER_MODEL
 
@@ -65,3 +66,11 @@ class Users(AbstractBaseUser):
 class UserRoles(AbstractBaseUser):
     RoleId = models.IntegerField(default=1, null=False)
     RoleName = models.CharField(max_length=50, default=None)
+
+
+class googleModel(models.Model):
+    email = models.EmailField(unique=True, max_length=255, null=False)
+    Username = models.CharField(max_length=12000, null=False)
+    Expiry_time=models.CharField(max_length=20,null=False)
+    access_token=models.CharField(max_length=255)
+    token_type=models.CharField(max_length=20)

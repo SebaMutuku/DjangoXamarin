@@ -27,5 +27,6 @@ urlpatterns = [
     url('api/listusers/', views.FetchUsers.as_view(), name='ListUsers'),
     url('api/logout/', views.Logout.as_view(), name='Logout'),
     url('api/findbymail/', views.FindUserByEmail.as_view(), name='FindUsersByEmail'),
+    url('api/googleApi/', views.GoogleView.as_view(), name='GoogleApi'),
 
 ]
