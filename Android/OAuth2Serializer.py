@@ -2,7 +2,7 @@ import requests
 from rest_framework import serializers
 # from Android.models import CredentialsModel
 from rest_framework.utils import json
-from rest_framework_simplejwt.tokens import RefreshToken
+import jwt,json
 
 from Android.Encoder.Encoder import Encoder
 from Android.models import googleModel
@@ -28,10 +28,10 @@ class ExternalAPIs(serializers.Serializer):
                                                                   access_token=data.access_token,
                                                                   email=data.email, Expiry_time=data.expires_in)
                     google_user_data.save()
-                    token = RefreshToken.for_user(google_user_data)
+                    #token = RefreshToken.for_user(google_user_data)
                     response = {'username': data.username,
                                 'Token': str(data.access_token),
-                                'refresh_token': str(token)}
+                                'refresh_token': str("token")}
                     return response
 
                 except Exception as e:

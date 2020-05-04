@@ -3,7 +3,6 @@
 from django.contrib.auth import logout
 from rest_framework import status, views
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
-from rest_framework.authtoken.models import Token
 from rest_framework.decorators import parser_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import JSONParser
@@ -14,9 +13,6 @@ from rest_framework.views import APIView
 
 from . import models, OAuth2Serializer
 from .AndroidSerializer import LoginSerializer, RegisterSerializer, ListAllUsers
-
-
-# from .OAuth2Serializer import OAuth2Serializer
 
 
 class Login(APIView):
@@ -31,17 +27,10 @@ class Login(APIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         if serializer.is_valid():
-            user = serializer.checkLoginCredentials(request.data)
-            print(str(user))
-            if user is not None:
-                token, created = Token.objects.get_or_create(user=user)
-                if token is not None:
-                    response = {"Message": "Successfully Logged In ", "token": token.key}
-                    return Response(response, status=status.HTTP_200_OK)
-                else:
-                    response = {{"Message": "Invalid Login Credentials", "token": None}}
-                    # response = {{"Message": "Invalid Login Credentials", "token": "oioitoioio6ytytTBVGYGt"}}
-                    return Response(response, status=status.HTTP_200_OK)
+            token = serializer.checkLoginCredentials(request.data)
+            if token is not None:
+                response = {"Message": "Successfully Logged In ", "token": token}
+                return Response(response, status=status.HTTP_200_OK)
             else:
                 response = {"Message": "Invalid Login Credentials", "token": None}
                 return Response(response, status=status.HTTP_200_OK)
@@ -132,7 +121,7 @@ class GoogleView(views.APIView):
         if serializer.is_valid():
             data = serializer.getUserDetailsFromGoogle(request.data)
             if data:
-                return Response({"Payload": data, "Message": "Success"},status=status.HTTP_200_OK)
+                return Response({"Payload": data, "Message": "Success"}, status=status.HTTP_200_OK)
             else:
                 return Response({"Message": "Invalid grant-type"}, status.HTTP_200_OK)
         else:
@@ -141,6 +130,7 @@ class GoogleView(views.APIView):
 
 class FacebookView(views.APIView):
     serializer_class = OAuth2Serializer.ExternalAPIs
+
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():

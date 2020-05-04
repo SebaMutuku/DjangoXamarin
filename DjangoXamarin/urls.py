@@ -22,11 +22,11 @@ app_name = 'Android'
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^api/login/', views.Login.as_view(), name='Login'),
-    url('api/register/', views.Register.as_view(), name='Register'),
-    url('api/listusers/', views.FetchUsers.as_view(), name='ListUsers'),
-    url('api/logout/', views.Logout.as_view(), name='Logout'),
-    url('api/findbymail/', views.FindUserByEmail.as_view(), name='FindUsersByEmail'),
-    url('api/googleApi/', views.GoogleView.as_view(), name='GoogleApi'),
+    url(r'^api/users/login', views.Login.as_view(), name='Login'),
+    url('api/users/register', views.Register.as_view(), name='Register'),
+    url('api/users/listusers', views.FetchUsers.as_view(), name='ListUsers'),
+    url('api/users/logout', views.Logout.as_view(), name='Logout'),
+    url('api/users/findbymail', views.FindUserByEmail.as_view(), name='FindUsersByEmail'),
+    url('api/users/googleApi', views.GoogleView.as_view(), name='GoogleApi'),
 
 ]

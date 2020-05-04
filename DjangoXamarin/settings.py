@@ -92,10 +92,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'DjangoAngular',
-        'USER': 'root',
+        'USER': 'djangoangular',
         'PASSWORD': 'djangoangular',
         'HOST': 'localhost',
-        'PORT': '',
+        'PORT': 5432,
     }
 }
 REST_FRAMEWORK = {
@@ -108,13 +108,14 @@ REST_FRAMEWORK = {
 """DATABASES = {
     'default': {
         'ENGINE': 'djongo',
+        'ENFORCE_SCHEMA': True,
         'NAME': 'DjangoAngular',
-        'USER': 'root',
-        'PASSWORD': 'djangoangular',
+        'USER': '',
+        'PASSWORD': '',
         'HOST': 'localhost',
-        'POST': '27017'
+        'POST': 27017
     }
-} """
+}"""
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
