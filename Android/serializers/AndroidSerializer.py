@@ -98,12 +98,12 @@ class RegisterSerializer(serializers.ModelSerializer, PageNumberPagination):
                         FirstName = data['firstname']
                         SecondName = data['lastname']
                         if self.check_roles(data) is not None:
-                            if self.checkRoles(data) == "ADMIN":
+                            if self.checkRoles(data.get('RoleId')) == "ADMIN":
                                 user = AddUsersIntoDb().create_superuser(email=email,
                                                                          password=password,
                                                                          lastname=SecondName,
                                                                          firstname=FirstName)
-                            elif self.checkRoles(data) == "STAFF":
+                            elif self.checkRoles(data.get('RoleId')) == "STAFF":
                                 user = AddUsersIntoDb().create_superuser(email=email,
                                                                          password=password,
                                                                          LastName=SecondName,
@@ -113,14 +113,15 @@ class RegisterSerializer(serializers.ModelSerializer, PageNumberPagination):
                                                                            password=password,
                                                                            firstname=FirstName,
                                                                            lastname=SecondName)
+                            return user
                         else:
                             raise serializers.ValidationError({"Message": "Missing Role Name"})
-                            user=None
-                            return user
+                            return  None
 
-    def check_roles(self, data):
+    def check_roles(self, roleId):
         try:
-            role = RoleModel.objects.get(RoleId=data['RoleId'])
+            role = RoleModel.objects.get(RoleId=roleId)
+            print(str(role))
             if role.RoleType is not None:
                 roleName = role.RoleType
             else:
