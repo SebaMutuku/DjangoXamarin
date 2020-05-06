@@ -11,8 +11,9 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from . import models, OAuth2Serializer
-from .AndroidSerializer import LoginSerializer, RegisterSerializer, ListAllUsers
+from . import models
+from .serializers import OAuth2Serializer
+from Android.serializers.AndroidSerializer import LoginSerializer, RegisterSerializer, ListAllUsers
 
 
 class Login(APIView):
@@ -141,3 +142,4 @@ class FacebookView(views.APIView):
                 return Response({"Message": "Invalid grant-type"}, status.HTTP_401_UNAUTHORIZED)
         else:
             return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+

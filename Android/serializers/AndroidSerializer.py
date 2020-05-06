@@ -1,15 +1,16 @@
 import logging
+import traceback
 from datetime import datetime, timedelta
 
 import jwt
 from django.http import HttpResponse
-from passlib.handlers.pbkdf2 import pbkdf2_sha256
 from rest_framework import authentication
 from rest_framework import serializers
 from rest_framework.pagination import PageNumberPagination
 
+from Android.models import Users as UserModel, Roles as RoleModel, AddUsersIntoDb
+from Android.security.Encryption import encrypt, decrypt
 from DjangoXamarin import settings
-from .models import Users as UserModel, User
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ class LoginSerializer(serializers.Serializer):
 
         fields = (
             'email',
-            'Password'
+            'password'
         )
         model = UserModel
 
@@ -27,11 +28,11 @@ class LoginSerializer(serializers.Serializer):
         global user
         email = data.get('email')
         # password = pbkdf2_sha256.encrypt(data.get('password'), rounds=36000, salt_size=32)
-        password = data.get('Password')
+        password = decrypt(data.get('password'))
         logger.info("Invalid user")
 
         try:
-            user = UserModel.objects.get(email=email)
+            user = UserModel.objects.get(email=email, password=password)
             if user is not None:
                 if user.is_active:
                     if not user.IsLoggedin:
@@ -66,11 +67,11 @@ class RegisterSerializer(serializers.ModelSerializer, PageNumberPagination):
         fields = (
             'id',
             'email',
-            'FirstName',
-            'SecondName',
+            'firstname',
+            'lastname',
             'is_active',
-            'IsLoggedin',
-            'Password',
+            'logged_in',
+            'password',
             'is_admin',
             'is_staff',
             'token'
@@ -79,7 +80,7 @@ class RegisterSerializer(serializers.ModelSerializer, PageNumberPagination):
     def addUser(self, data):
         loggedinuser = "DecodeToken().decodeToken(data)"
         if loggedinuser is not None:
-            if data['Password'] is None:
+            if data['password'] is None:
                 raise serializers.ValidationError({"Message": "Passwords do not match"})
             else:
                 from django.core.validators import validate_email
@@ -88,21 +89,46 @@ class RegisterSerializer(serializers.ModelSerializer, PageNumberPagination):
                     raise serializers.ValidationError({"Message": "Please enter a valid email"})
                 else:
                     email_exist = UserModel.objects.filter(email=data['email'])
-                    # username_exist = UserModel.objects.filter(email=data['Username'])
                     if email_exist:
                         raise serializers.ValidationError(
                             {"Message": "User with email " + "[" + str(data['email']) + "]" + " already exists "})
                     else:
-                        password = pbkdf2_sha256.encrypt(data['Password'], rounds=36000, salt_size=32)
-                        user = UserModel.objects.create(
-                            email=data['email'],
-                            Password=data['Password'],
-                            FirstName=data['FirstName'],
-                            SecondName=data['SecondName'], )
-                        user.save()
-        else:
-            user = None
-        return user
+                        password = encrypt(data['password'])
+                        email = data.get('email')
+                        FirstName = data['firstname']
+                        SecondName = data['lastname']
+                        if self.check_roles(data) is not None:
+                            if self.checkRoles(data) == "ADMIN":
+                                user = AddUsersIntoDb().create_superuser(email=email,
+                                                                         password=password,
+                                                                         lastname=SecondName,
+                                                                         firstname=FirstName)
+                            elif self.checkRoles(data) == "STAFF":
+                                user = AddUsersIntoDb().create_superuser(email=email,
+                                                                         password=password,
+                                                                         LastName=SecondName,
+                                                                         FirstName=FirstName)
+                            else:
+                                user = AddUsersIntoDb().create_normal_user(email=email,
+                                                                           password=password,
+                                                                           firstname=FirstName,
+                                                                           lastname=SecondName)
+                        else:
+                            raise serializers.ValidationError({"Message": "Missing Role Name"})
+                            user=None
+                            return user
+
+    def check_roles(self, data):
+        try:
+            role = RoleModel.objects.get(RoleId=data['RoleId'])
+            if role.RoleType is not None:
+                roleName = role.RoleType
+            else:
+                roleName = None
+        except Exception as e:
+            logging.getLogger(str("The Exception is: %s".join(e.args)).strip())
+            roleName = None
+        return roleName
 
 
 class ListAllUsers(serializers.ModelSerializer, PageNumberPagination):
@@ -162,13 +188,13 @@ class DecodeToken:
                     user_data = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
                     user_id = user_data['id']
                     username = user_data['subject']
-                    db_user = User.objects.get(user_id=user_id, username=username)
+                    db_user = UserModel.objects.get(user_id=user_id, username=username)
                     if db_user.token == token:
                         loggedinuser = db_user.username
                     else:
                         loggedinuser = None
             except jwt.ExpiredSignature or jwt.DecodeError or jwt.InvalidTokenError:
                 return HttpResponse({'Error': "Token is invalid"}, status="403")
-            except User.DoesNotExist:
+            except UserModel.DoesNotExist:
                 loggedinuser = None
         return loggedinuser
