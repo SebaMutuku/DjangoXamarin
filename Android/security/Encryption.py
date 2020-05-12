@@ -21,7 +21,7 @@ def encrypt(rawParam):
 def decrypt(encrypted_value):
     try:
         raw_value = base64.urlsafe_b64decode(encrypted_value)
-        cipher_suite = Fernet(settings.ENCRYPT_KEY)
+        cipher_suite = Fernet(settings.ENCRYPTION_KEY)
         decoded_value = cipher_suite.decrypt(raw_value).decode("ascii")
     except Exception as e:
         logging.getLogger(str(e.args)).error(traceback.format_exc())

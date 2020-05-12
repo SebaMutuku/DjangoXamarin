@@ -11,6 +11,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+
 from . import models
 from .serializers import OAuth2Serializer
 from Android.serializers.AndroidSerializer import LoginSerializer, RegisterSerializer, ListAllUsers
@@ -34,6 +35,7 @@ class Login(APIView):
                 return Response(response, status=status.HTTP_200_OK)
             else:
                 response = {"Message": "Invalid Login Credentials", "token": None}
+
                 return Response(response, status=status.HTTP_200_OK)
         else:
             response = serializer.errors

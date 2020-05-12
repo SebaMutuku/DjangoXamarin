@@ -5,41 +5,43 @@ from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
 
-# from oauth2client.contrib.django_util.models import CredentialsField
-
 User = settings.AUTH_USER_MODEL
+Role = settings.AUTH_ROLE_MODEL
 
 
 class AddUsersIntoDb(BaseUserManager):
-    def create_user(self, email, password=None, firstname=None, lastname=None, is_active=False, is_admin=False,
-                    is_staff=False, roleid=None):
+    def create_user(self, email, password, **extra_fields):
         if not email:
             raise ValueError("Email is required")
         else:
-            user = self.model(email=self.normalize_email(email), password=password, )
+            user = Users.objects.create(email=email,
+                                        firstname=extra_fields.get('firstname'),
+                                        lastname=extra_fields.get('firstname'),
+                                        last_login=None,
+                                        roleid=extra_fields.get('roleid'), )
             user.set_password(password)
-            user.firstname = firstname
-            user.lastname = lastname
-            user.is_active = is_active
-            user.is_admin = is_admin
-            user.is_staff = is_staff
-            user.roleid = roleid
-            user.save(using=self._db)
         return user
 
     def create_staffuser(self, email, password=None, firstname=None, lastname=None):
-        user = self.create_user(email, password=password, firstname=firstname, LastName=lastname, is_admin=False,
-                                is_active=True, is_staff=True, roleid=2)
+        user = self.create_user(email, password=password, firstname=firstname, LastName=lastname, roleid=2)
+        user.is_staff = True
+        user.is_admin = False
+        user.save()
         return user
 
     def create_superuser(self, email, password=None, firstname=None, lastname=None):
         user = self.create_user(email, password=password, firstname=firstname, lastname=lastname, is_active=True,
                                 is_admin=True, roleid=1)
+        user.is_staff = True
+        user.is_admin = True
+        user.save()
         return user
 
     def create_normal_user(self, email, password=None, firstname=None, lastname=None):
-        user = self.create_user(email, password=password, firstname=firstname, lastname=lastname, is_active=True,
-                                is_admin=False, roleid=3)
+        user = self.create_user(email, password=password, firstname=firstname, lastname=lastname, roleid=3)
+        user.is_staff = False
+        user.is_admin = False
+        user.save()
         return user
 
     @staticmethod
@@ -60,7 +62,7 @@ class Users(AbstractBaseUser):
         return self.email
 
     @property
-    def token(self):
+    def getToken(self):
         return self.token
 
     email = models.EmailField(unique=True, max_length=255, null=False)

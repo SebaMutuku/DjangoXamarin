@@ -1,5 +1,4 @@
 import logging
-import traceback
 from datetime import datetime, timedelta
 
 import jwt
@@ -26,13 +25,12 @@ class LoginSerializer(serializers.Serializer):
 
     def checkLoginCredentials(self, data, *args, **kwargs):
         global user
-        email = data.get('email')
-        # password = pbkdf2_sha256.encrypt(data.get('password'), rounds=36000, salt_size=32)
-        password = decrypt(data.get('password'))
-        logger.info("Invalid user")
+        email = data['email']
+        password = decrypt(data['password'])
+        logger.info("Invalid user",email,password)
 
         try:
-            user = UserModel.objects.get(email=email, password=password)
+            user = UserModel.objects.get(email=email, password=encrypt(password))
             if user is not None:
                 if user.is_active:
                     if not user.IsLoggedin:
@@ -79,6 +77,8 @@ class RegisterSerializer(serializers.ModelSerializer, PageNumberPagination):
 
     def addUser(self, data):
         loggedinuser = "DecodeToken().decodeToken(data)"
+        token = UserModel.token
+        print("This is token", token)
         if loggedinuser is not None:
             if data['password'] is None:
                 raise serializers.ValidationError({"Message": "Passwords do not match"})
@@ -90,6 +90,7 @@ class RegisterSerializer(serializers.ModelSerializer, PageNumberPagination):
                 else:
                     email_exist = UserModel.objects.filter(email=data['email'])
                     if email_exist:
+
                         raise serializers.ValidationError(
                             {"Message": "User with email " + "[" + str(data['email']) + "]" + " already exists "})
                     else:
@@ -97,31 +98,37 @@ class RegisterSerializer(serializers.ModelSerializer, PageNumberPagination):
                         email = data.get('email')
                         FirstName = data['firstname']
                         SecondName = data['lastname']
-                        if self.check_roles(data) is not None:
-                            if self.checkRoles(data.get('RoleId')) == "ADMIN":
+                        roleId = data['RoleId']
+                        print("RoleName is: ", self.check_roles(roleId))
+                        if self.check_roles(roleId) is not None:
+                            if self.check_roles(roleId) == "ADMIN":
                                 user = AddUsersIntoDb().create_superuser(email=email,
                                                                          password=password,
                                                                          lastname=SecondName,
-                                                                         firstname=FirstName)
-                            elif self.checkRoles(data.get('RoleId')) == "STAFF":
-                                user = AddUsersIntoDb().create_superuser(email=email,
+                                                                         firstname=FirstName, )
+                            elif self.check_roles(data.get('RoleId')) == "STAFF":
+                                user = AddUsersIntoDb().create_staffuser(email=email,
                                                                          password=password,
-                                                                         LastName=SecondName,
-                                                                         FirstName=FirstName)
+                                                                         firstname=FirstName,
+                                                                         lastname=SecondName, )
                             else:
                                 user = AddUsersIntoDb().create_normal_user(email=email,
                                                                            password=password,
                                                                            firstname=FirstName,
                                                                            lastname=SecondName)
-                            return user
+                            entityResponse = {'FirstName': user.firstname,
+                                              'LastName': user.lastname,
+                                              'email': user.email,
+                                              'Role': self.check_roles(roleId)}
+                            return entityResponse
                         else:
-                            raise serializers.ValidationError({"Message": "Missing Role Name"})
-                            return  None
+                            raise serializers.ValidationError({"Message": "Missing Role Name attached to RoleID "
+                                                                          "supplied"})
+                            return None
 
     def check_roles(self, roleId):
         try:
             role = RoleModel.objects.get(RoleId=roleId)
-            print(str(role))
             if role.RoleType is not None:
                 roleName = role.RoleType
             else:
@@ -159,12 +166,13 @@ class ListAllUsers(serializers.ModelSerializer, PageNumberPagination):
         try:
             user = UserModel.objects.get(email=data['email'])
             if user is not None:
-                return user
+                user = user
             else:
                 user = None
-            return user
+                return user
         except UserModel.DoesNotExist:
             user = None
+            return user
 
 
 class DecodeToken:

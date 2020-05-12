@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+from django.contrib.auth import views as  login_views
 
 from Android import views
 
@@ -28,5 +29,6 @@ urlpatterns = [
     url('api/users/logout', views.Logout.as_view(), name='Logout'),
     url('api/users/findbymail', views.FindUserByEmail.as_view(), name='FindUsersByEmail'),
     url('api/users/googleApi', views.GoogleView.as_view(), name='GoogleApi'),
+    url('api/login', login_views.LoginView.as_view(), name='log'),
 
 ]

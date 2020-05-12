@@ -58,6 +58,7 @@ ROOT_URLCONF = 'DjangoXamarin.urls'
 CORS_ORIGIN_ALLOW_ALL = True
 REST_USE_JWT = True
 AUTH_USER_MODEL = 'Android.Users'
+AUTH_ROLE_MODEL='Android.Roles'
 ENCRYPTION_KEY='eJ2q__p8QCed8Q-xuN33QbHF__qO89FmmL6pK5i3SV8='
 JWT_AUTH = {
     'JWT_VERIFY': True,
