@@ -24,7 +24,6 @@ class LoginSerializer(serializers.Serializer):
         model = UserModel
 
     def checkLoginCredentials(self, data):
-        global user
         email = data['email']
         password = data['password']
         logger.info("Invalid user", email, password)
@@ -32,7 +31,7 @@ class LoginSerializer(serializers.Serializer):
         try:
             user = UserModel.objects.get(email__exact=email)
             encoded_password = encryptRawValues(password)
-            replacedPassword = encoded_password.replace('b', '').replace('\'', '')
+            replacedPassword = encoded_password[1:].replace('\'', '')
             if user is not None:
                 if user.is_active:
                     if not user.logged_in:
@@ -42,7 +41,8 @@ class LoginSerializer(serializers.Serializer):
                             claims = {
                                 "id": user.id,
                                 "subject": user.email,
-                                "exp": expirydate
+                                "exp": expirydate,
+                                "roleId": user.roleid
                             }
                             token = jwt.encode(claims, secret_key, algorithm='HS256')
                             user.token = token
@@ -81,55 +81,50 @@ class RegisterSerializer(serializers.ModelSerializer, PageNumberPagination):
         )
 
     def addUser(self, data):
-        loggedinuser = DecodeToken().decodeToken(data)
-        token = UserModel.token
-        print("This is token", token)
-        if loggedinuser is not None:
-            if data['password'] is None:
-                raise serializers.ValidationError({"Message": "Passwords do not match"})
+        if data['password'] is None:
+            raise serializers.ValidationError({"Message": "Passwords do not match"})
+        else:
+            from django.core.validators import validate_email
+            email = validate_email(data['email'])
+            if email is False:
+                raise serializers.ValidationError({"Message": "Please enter a valid email"})
             else:
-                from django.core.validators import validate_email
-                email = validate_email(data['email'])
-                if email is False:
-                    raise serializers.ValidationError({"Message": "Please enter a valid email"})
+                email_exist = UserModel.objects.filter(email=data['email'])
+                if email_exist:
+                    raise serializers.ValidationError(
+                        {"Message": "User with email " + "[" + str(data['email']) + "]" + " already exists "})
                 else:
-                    email_exist = UserModel.objects.filter(email=data['email'])
-                    if email_exist:
-                        raise serializers.ValidationError(
-                            {"Message": "User with email " + "[" + str(data['email']) + "]" + " already exists "})
-                    else:
-                        password = encryptRawValues(data['password'])
-                        print("Encrypted password", password)
-                        email = data.get('email')
-                        FirstName = data['firstname']
-                        SecondName = data['lastname']
-                        roleId = data['RoleId']
-                        print("RoleName is: ", self.check_roles(roleId))
-                        if self.check_roles(roleId) is not None:
-                            if self.check_roles(roleId) == "ADMIN":
-                                user = AddUsersIntoDb().create_superuser(email=email,
-                                                                         password=password,
-                                                                         lastname=SecondName,
-                                                                         firstname=FirstName, )
-                            elif self.check_roles(data.get('RoleId')) == "STAFF":
-                                user = AddUsersIntoDb().create_staffuser(email=email,
-                                                                         password=password,
-                                                                         firstname=FirstName,
-                                                                         lastname=SecondName, )
-                            else:
-                                user = AddUsersIntoDb().create_normal_user(email=email,
-                                                                           password=password,
-                                                                           firstname=FirstName,
-                                                                           lastname=SecondName)
-                            entityResponse = {'FirstName': user.firstname,
-                                              'LastName': user.lastname,
-                                              'email': user.email,
-                                              'Role': self.check_roles(roleId)}
-                            return entityResponse
+                    password = encryptRawValues(data['password'])
+                    print("Encrypted password", password)
+                    email = data.get('email')
+                    FirstName = data['firstname']
+                    SecondName = data['lastname']
+                    roleId = data['RoleId']
+                    print("RoleName is: ", self.check_roles(roleId))
+                    if self.check_roles(roleId) is not None:
+                        if self.check_roles(roleId) == "ADMIN":
+                            user = AddUsersIntoDb().create_superuser(email=email,
+                                                                     password=password,
+                                                                     lastname=SecondName,
+                                                                     firstname=FirstName, )
+                        elif self.check_roles(data.get('RoleId')) == "STAFF":
+                            user = AddUsersIntoDb().create_staffuser(email=email,
+                                                                     password=password,
+                                                                     firstname=FirstName,
+                                                                     lastname=SecondName, )
                         else:
-                            raise serializers.ValidationError({"Message": "Missing Role Name attached to RoleID "
-                                                                          "supplied"})
-                            return None
+                            user = AddUsersIntoDb().create_normal_user(email=email,
+                                                                       password=password,
+                                                                       firstname=FirstName,
+                                                                       lastname=SecondName)
+                        entityResponse = {'FirstName': user.firstname,
+                                          'LastName': user.lastname,
+                                          'email': user.email,
+                                          'Role': self.check_roles(roleId)}
+                        return entityResponse
+                    else:
+                        raise serializers.ValidationError({"Message": "Insufficient priviledges"})
+                    return None
 
     def check_roles(self, roleId):
         try:
@@ -200,11 +195,16 @@ class DecodeToken:
                 else:
                     user_data = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
                     user_id = user_data['id']
-                    print(user_id)
                     username = user_data['subject']
+                    role = user_data['roleId']
                     db_user = UserModel.objects.get(email__iexact=username)
-                    if db_user.token == token:
-                        loggedinuser = db_user.username
+                    db_token = db_user.token[1:].replace("\'", "")
+                    passed_token = str(token)[2:].replace("\'", "")
+                    if db_token == passed_token and user_id == db_user.id:
+                        loggedinuser = dict()
+                        loggedinuser['loggedinuser'] = loggedinuser
+                        loggedinuser['roleId'] = role
+                        loggedinuser['token'] = token
                     else:
                         loggedinuser = None
             except jwt.ExpiredSignature or jwt.DecodeError or jwt.InvalidTokenError:

@@ -11,10 +11,9 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-
+from Android.serializers.AndroidSerializer import LoginSerializer, RegisterSerializer, ListAllUsers, DecodeToken
 from . import models
 from .serializers import OAuth2Serializer
-from Android.serializers.AndroidSerializer import LoginSerializer, RegisterSerializer, ListAllUsers
 
 
 class Login(APIView):
@@ -50,19 +49,30 @@ class Register(views.APIView):
     pagination_class = PageNumberPagination
 
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            user = serializer.addUser(request.data)
-            if user:
-                return Response({"User": serializer.data,
-                                 "Message": "Successfully created user " "[" + request.data.get('email') + "]"},
-                                status=status.HTTP_200_OK)
+        loggedinuser = DecodeToken().decodeToken(request)
+        print(loggedinuser['roleId'])
+        if loggedinuser is not None:
+            roleId = loggedinuser['roleId']
+            if roleId == 1 or roleId == 2:
+                serializer = self.serializer_class(data=request.data)
+                if serializer.is_valid(raise_exception=True):
+                    user = serializer.addUser(request.data)
+                    if user:
+                        return Response({"User": serializer.data,
+                                         "Message": "Successfully created user " "[" + request.data.get('email') + "]"},
+                                        status=status.HTTP_200_OK)
+                    else:
+                        return Response({"Invalid login credentials"},
+                                        status=status.HTTP_401_UNAUTHORIZED)
+
+                else:
+                    return Response(serializer.errors, status.HTTP_401_UNAUTHORIZED)
             else:
-                return Response({"Invalid login credentials"},
-                                status=status.HTTP_401_UNAUTHORIZED)
+                return Response({"Message": "Insufficent privileges"},
+                                status=status.HTTP_406_NOT_ACCEPTABLE)
 
         else:
-            return Response(serializer.errors, status.HTTP_401_UNAUTHORIZED)
+            return Response({"Message": "Invalid Token"}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class Logout(views.APIView):
@@ -144,4 +154,3 @@ class FacebookView(views.APIView):
                 return Response({"Message": "Invalid grant-type"}, status.HTTP_401_UNAUTHORIZED)
         else:
             return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
-

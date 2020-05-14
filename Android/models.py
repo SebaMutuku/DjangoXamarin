@@ -52,11 +52,11 @@ class AddUsersIntoDb(BaseUserManager):
 
 class Users(AbstractBaseUser):
     def get_full_name(self):
-        full_name = '%s %s' % (self.FirstName, self.SecondName)
+        full_name = '%s %s' % (self.firstname, self.lastname)
         return full_name.strip()
 
     def get_short_name(self):
-        return self.FirstName
+        return self.firstname
 
     def __str__(self):
         return self.email
