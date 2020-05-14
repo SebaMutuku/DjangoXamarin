@@ -20,6 +20,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'igs9bemjvgt8+2&mqdbn3giso2cwf3h0uxaldh3yrnxyh_je@m'
+ENCRYPTION_BLOCK_SIZE = 32
+PADDING = '{'
+USER_PASS_KEY='pEp96PsFTvfNGUNttFWqObLgKeqb9j9+sIBo/B98kZA='
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -58,8 +61,8 @@ ROOT_URLCONF = 'DjangoXamarin.urls'
 CORS_ORIGIN_ALLOW_ALL = True
 REST_USE_JWT = True
 AUTH_USER_MODEL = 'Android.Users'
-AUTH_ROLE_MODEL='Android.Roles'
-ENCRYPTION_KEY='eJ2q__p8QCed8Q-xuN33QbHF__qO89FmmL6pK5i3SV8='
+AUTH_ROLE_MODEL = 'Android.Roles'
+ENCRYPTION_KEY = 'eJ2q__p8QCed8Q-xuN33QbHF__qO89FmmL6pK5i3SV8='
 JWT_AUTH = {
     'JWT_VERIFY': True,
     'JWT_VERIFY_EXPIRATION': True,

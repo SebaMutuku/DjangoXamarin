@@ -8,7 +8,7 @@ from rest_framework import serializers
 from rest_framework.pagination import PageNumberPagination
 
 from Android.models import Users as UserModel, Roles as RoleModel, AddUsersIntoDb
-from Android.security.Encryption import encrypt, decrypt
+from Android.security.Encryption import encryptRawValues
 from DjangoXamarin import settings
 
 logger = logging.getLogger(__name__)
@@ -23,28 +23,33 @@ class LoginSerializer(serializers.Serializer):
         )
         model = UserModel
 
-    def checkLoginCredentials(self, data, *args, **kwargs):
+    def checkLoginCredentials(self, data):
         global user
         email = data['email']
-        password = decrypt(data['password'])
-        logger.info("Invalid user",email,password)
+        password = data['password']
+        logger.info("Invalid user", email, password)
 
         try:
-            user = UserModel.objects.get(email=email, password=encrypt(password))
+            user = UserModel.objects.get(email__exact=email)
+            encoded_password = encryptRawValues(password)
+            replacedPassword = encoded_password.replace('b', '').replace('\'', '')
             if user is not None:
                 if user.is_active:
-                    if not user.IsLoggedin:
-                        secret_key = settings.SECRET_KEY
-                        expirydate = datetime.now() + timedelta(days=60)
-                        claims = {
-                            "id": user.id,
-                            "subject": user.email,
-                            "exp": expirydate
-                        }
-                        token = jwt.encode(claims, secret_key, algorithm='HS256')
-                        user.token = token
-                        user.IsLoggedin = True
-                        user.save()
+                    if not user.logged_in:
+                        if replacedPassword == user.password:
+                            secret_key = settings.SECRET_KEY
+                            expirydate = datetime.now() + timedelta(days=60)
+                            claims = {
+                                "id": user.id,
+                                "subject": user.email,
+                                "exp": expirydate
+                            }
+                            token = jwt.encode(claims, secret_key, algorithm='HS256')
+                            user.token = token
+                            user.logged_in = True
+                            user.save()
+                        else:
+                            raise serializers.ValidationError({"Message": "Invalid login Credentials", "token": ""})
                     else:
                         raise serializers.ValidationError(
                             {"Message": "User Already Logged in.Logout First", "token": ""})
@@ -76,7 +81,7 @@ class RegisterSerializer(serializers.ModelSerializer, PageNumberPagination):
         )
 
     def addUser(self, data):
-        loggedinuser = "DecodeToken().decodeToken(data)"
+        loggedinuser = DecodeToken().decodeToken(data)
         token = UserModel.token
         print("This is token", token)
         if loggedinuser is not None:
@@ -90,11 +95,11 @@ class RegisterSerializer(serializers.ModelSerializer, PageNumberPagination):
                 else:
                     email_exist = UserModel.objects.filter(email=data['email'])
                     if email_exist:
-
                         raise serializers.ValidationError(
                             {"Message": "User with email " + "[" + str(data['email']) + "]" + " already exists "})
                     else:
-                        password = encrypt(data['password'])
+                        password = encryptRawValues(data['password'])
+                        print("Encrypted password", password)
                         email = data.get('email')
                         FirstName = data['firstname']
                         SecondName = data['lastname']
@@ -176,7 +181,6 @@ class ListAllUsers(serializers.ModelSerializer, PageNumberPagination):
 
 
 class DecodeToken:
-
     def decodeToken(self, request):
         headers = authentication.get_authorization_header(request).split()
         if not headers or headers[0].lower() != b'token':
@@ -196,8 +200,9 @@ class DecodeToken:
                 else:
                     user_data = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
                     user_id = user_data['id']
+                    print(user_id)
                     username = user_data['subject']
-                    db_user = UserModel.objects.get(user_id=user_id, username=username)
+                    db_user = UserModel.objects.get(email__iexact=username)
                     if db_user.token == token:
                         loggedinuser = db_user.username
                     else:

@@ -66,7 +66,7 @@ class Users(AbstractBaseUser):
         return self.token
 
     email = models.EmailField(unique=True, max_length=255, null=False)
-    password = models.CharField(max_length=12000, null=False)
+    password = models.CharField(max_length=255, null=False)
     firstname = models.CharField(max_length=50, default=None)
     lastname = models.CharField(max_length=50, default=None)
     is_active = models.BooleanField(default=True)
