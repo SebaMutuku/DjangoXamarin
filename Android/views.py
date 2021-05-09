@@ -13,11 +13,12 @@ from rest_framework.views import APIView
 
 from Android.serializers.AndroidSerializer import LoginSerializer, RegisterSerializer, ListAllUsers, DecodeToken
 from . import models
+from .models import AndroidUsers
 from .serializers import OAuth2Serializer
 
 
 class Login(APIView):
-    querySet = models.Users.objects.all()
+    querySet = models.AndroidRoles.objects.all()
     renderer_classes = (JSONRenderer,)
     serializer_class = LoginSerializer
     permission_classes = (AllowAny,)
@@ -43,23 +44,23 @@ class Login(APIView):
 
 class Register(views.APIView):
     permission_classes = (AllowAny,)
-    querySet = models.Users.objects.all()
+    querySet = models.AndroidUsers.objects.all()
     serializer_class = RegisterSerializer
     parser_classes(JSONParser, )
     pagination_class = PageNumberPagination
 
     def post(self, request):
         loggedinuser = DecodeToken().decodeToken(request)
-        print(loggedinuser['roleId'])
         if loggedinuser is not None:
-            roleId = loggedinuser['roleId']
+            roleId = loggedinuser
             if roleId == 1 or roleId == 2:
                 serializer = self.serializer_class(data=request.data)
                 if serializer.is_valid(raise_exception=True):
                     user = serializer.addUser(request.data)
                     if user:
                         return Response({"User": serializer.data,
-                                         "Message": "Successfully created user " "[" + request.data.get('email') + "]"},
+                                         "Message": "Successfully created user ['{}']".format(
+                                             request.data.get('email'))},
                                         status=status.HTTP_200_OK)
                     else:
                         return Response({"Invalid login credentials"},
@@ -88,22 +89,31 @@ class Logout(views.APIView):
 
 
 class FetchUsers(views.APIView):
+    permission_classes = (AllowAny,)
+    querySet = AndroidUsers.objects.all()
+    parser_classes(JSONParser, )
     serializer_class = ListAllUsers
 
-    permission_classes = (IsAuthenticated,)
-
     def get(self, request):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            data = serializer.listUsers()
-            # data = {"Data 1": "1", "Data 2": "2", "Data 3": "3", "Data 4": "4"}
-            data = models.Users.objects.get(email=request.data['email'])
-        return Response({"Payload": serializer.data, "Message": "Successful"}, status=status.HTTP_200_OK)
+        loggedinuser = DecodeToken().decodeToken(request)
+        print("logged in user", loggedinuser)
+        if loggedinuser is not None:
+            roleId = loggedinuser['roleId']
+            print(roleId)
+            if roleId == 1 or roleId == 2:
+                serializer = self.serializer_class(data=request.data)
+                if serializer.is_valid(raise_exception=True):
+                    data = serializer.listUsers()
+                return Response({"Payload": data, "Message": "Successful"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"Message": "Insufficent privileges"}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        else:
+            return Response({"Message": "Please log in first"}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class FindUserByEmail(views.APIView):
     permission_classes = (IsAuthenticated,)
-    querySet = models.Users.objects.all()
+    querySet = models.AndroidUsers.objects.all()
     serializer_class = ListAllUsers
     parser_classes(JSONParser, )
     pagination_class = PageNumberPagination
@@ -129,10 +139,10 @@ class GoogleView(views.APIView):
     serializer_class = OAuth2Serializer.ExternalAPIs
 
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+        serializer = self
 
         if serializer.is_valid():
-            data = serializer.getUserDetailsFromGoogle(request.data)
+            data = self.serializer_class.getUserDetailsFromGoogle(request.data)
             if data:
                 return Response({"Payload": data, "Message": "Success"}, status=status.HTTP_200_OK)
             else:

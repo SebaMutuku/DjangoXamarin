@@ -26,8 +26,9 @@ USER_PASS_KEY='pEp96PsFTvfNGUNttFWqObLgKeqb9j9+sIBo/B98kZA='
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+ALLOWED_HOSTS = ['39ac6697d5ad.ngrok.io', '127.0.0.1',
+                 'localhost','localhost:8000']
 
-ALLOWED_HOSTS = ['c8cadfb1.ngrok.io', '127.0.0.1']
 
 # Application definition
 
@@ -60,8 +61,8 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'DjangoXamarin.urls'
 CORS_ORIGIN_ALLOW_ALL = True
 REST_USE_JWT = True
-AUTH_USER_MODEL = 'Android.Users'
-AUTH_ROLE_MODEL = 'Android.Roles'
+AUTH_USER_MODEL = 'Android.AndroidUsers'
+AUTH_ROLE_MODEL = 'Android.AndroidRoles'
 ENCRYPTION_KEY = 'eJ2q__p8QCed8Q-xuN33QbHF__qO89FmmL6pK5i3SV8='
 JWT_AUTH = {
     'JWT_VERIFY': True,
