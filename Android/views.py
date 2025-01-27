@@ -56,7 +56,7 @@ class Register(views.APIView):
             if roleId == 1 or roleId == 2:
                 serializer = self.serializer_class(data=request.data)
                 if serializer.is_valid(raise_exception=True):
-                    user = serializer.addUser(request.data)
+                    user = serializer.add_user(request.data)
                     if user:
                         return Response({"User": serializer.data,
                                          "Message": "Successfully created user ['{}']".format(

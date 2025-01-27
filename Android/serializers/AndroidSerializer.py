@@ -102,7 +102,7 @@ class RegisterSerializer(serializers.ModelSerializer, PageNumberPagination):
             'token'
         )
 
-    def addUser(self, data):
+    def add_user(self, data):
         if data['password'] is None:
             raise serializers.ValidationError({"Message": "Passwords do not match"})
         else:
