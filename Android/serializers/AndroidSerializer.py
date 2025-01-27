@@ -45,11 +45,11 @@ class LoginSerializer(serializers.Serializer):
                     # if not user.logged_in != False:
                         if encoded_password == user.password:
                             secret_key = settings.SECRET_KEY
-                            expirydate = datetime.now() + timedelta(days=1)
+                            expiry_date = datetime.now() + timedelta(days=1)
                             claims = {
                                 "id": user.role_id,
                                 "subject": user.email,
-                                "exp": expirydate,
+                                "exp": expiry_date,
                                 "roleId": user.role_id
                             }
                             token = jwt.encode(claims, secret_key, algorithm='HS256')  # [1:].replace('\'', "")
