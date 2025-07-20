@@ -38,7 +38,7 @@ def encryptRawValues(rawValue):
     encode = lambda c, s: base64.b64encode(c.encrypt(pad(s)))
     secret = base64.b64decode(settings.USER_PASS_KEY)
     cipher = AES.new(secret)
-    encodedString = str(encode(cipher, rawValue))[1:].replace('\'','')
+    encodedString = str(encode(cipher, rawValue))[1:].replace('\'', '')
     print("Encoded String is:", encodedString)
     return encodedString
 

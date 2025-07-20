@@ -43,25 +43,25 @@ class LoginSerializer(serializers.Serializer):
             if user is not None:
                 if user.is_active:
                     # if not user.logged_in != False:
-                        if encoded_password == user.password:
-                            secret_key = settings.SECRET_KEY
-                            expiry_date = datetime.now() + timedelta(days=1)
-                            claims = {
-                                "id": user.role_id,
-                                "subject": user.email,
-                                "exp": expiry_date,
-                                "roleId": user.role_id
-                            }
-                            token = jwt.encode(claims, secret_key, algorithm='HS256')  # [1:].replace('\'', "")
-                            user.token = token
-                            user.logged_in = True
-                            user.last_login = datetime.today().strftime("%Y-%m-%d %H:%M")
-                            user.save()
-                        else:
-                            raise serializers.ValidationError({"Message": "Invalid login Credentials", "token": ""})
-                    # else:
-                    #     raise serializers.ValidationError(
-                    #         {"Message": "User Already Logged in.Logout First", "token": ""})
+                    if encoded_password == user.password:
+                        secret_key = settings.SECRET_KEY
+                        expiry_date = datetime.now() + timedelta(days=1)
+                        claims = {
+                            "id": user.role_id,
+                            "subject": user.email,
+                            "exp": expiry_date,
+                            "roleId": user.role_id
+                        }
+                        token = jwt.encode(claims, secret_key, algorithm='HS256')  # [1:].replace('\'', "")
+                        user.token = token
+                        user.logged_in = True
+                        user.last_login = datetime.today().strftime("%Y-%m-%d %H:%M")
+                        user.save()
+                    else:
+                        raise serializers.ValidationError({"Message": "Invalid login Credentials", "token": ""})
+                # else:
+                #     raise serializers.ValidationError(
+                #         {"Message": "User Already Logged in.Logout First", "token": ""})
                 else:
                     raise serializers.ValidationError({"Message": "User is Inactive", "token": ""})
 
