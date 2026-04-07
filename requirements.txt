@@ -44,7 +44,7 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 pytz==2023.3.post1
 PyYAML==6.0.2
-requests==2.32.0
+requests==2.32.4
 schema==0.7.7
 six==1.16.0
 South==1.0.2
