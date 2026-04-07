@@ -37,7 +37,7 @@ psycopg2-binary==2.9.9
 pycparser==2.22
 pycrypto==2.6.1
 pyjwkest==0.6.2
-PyJWT==2.10.1
+PyJWT==2.12.0
 pytest==8.3.5
 pytest-django==4.11.1
 python-dateutil==2.9.0.post0
